@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All-in-One Converter</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+  <div class="max-w-4xl mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-6 text-center">All-in-One Converter</h1>
+
+    <!-- Temperature Converter -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">Temperature Converter</h2>
+      <div class="flex gap-4 items-center">
+        <input type="number" id="tempInput" placeholder="Enter temperature" class="border p-2 rounded">
+        <select id="tempUnit" class="border p-2 rounded">
+          <option value="C">Celsius</option>
+          <option value="F">Fahrenheit</option>
+          <option value="K">Kelvin</option>
+        </select>
+        <button onclick="convertTemp()" class="bg-blue-500 text-white px-4 py-2 rounded">Convert</button>
+      </div>
+      <p id="tempResult" class="mt-2"></p>
+    </div>
+
+    <!-- Weight Converter -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">Weight Converter</h2>
+      <div class="flex gap-4 items-center">
+        <input type="number" id="weightInput" placeholder="Enter weight" class="border p-2 rounded">
+        <select id="weightUnit" class="border p-2 rounded">
+          <option value="kg">Kilogram</option>
+          <option value="lb">Pound</option>
+        </select>
+        <button onclick="convertWeight()" class="bg-blue-500 text-white px-4 py-2 rounded">Convert</button>
+      </div>
+      <p id="weightResult" class="mt-2"></p>
+    </div>
+
+    <!-- Currency Converter -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">Currency Converter</h2>
+      <div class="flex gap-4 items-center">
+        <input type="number" id="currencyInput" placeholder="Amount" class="border p-2 rounded">
+        <select id="currencyFrom" class="border p-2 rounded"></select>
+        <select id="currencyTo" class="border p-2 rounded"></select>
+        <button onclick="convertCurrency()" class="bg-green-500 text-white px-4 py-2 rounded">Convert</button>
+      </div>
+      <p id="currencyResult" class="mt-2"></p>
+    </div>
+
+    <!-- Volume Converter -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">Volume Converter</h2>
+      <div class="flex gap-4 items-center">
+        <input type="number" id="volumeInput" placeholder="Enter volume" class="border p-2 rounded">
+        <select id="volumeUnit" class="border p-2 rounded">
+          <option value="liters">Liters</option>
+          <option value="ml">Milliliters</option>
+          <option value="gallon">Gallon (US)</option>
+          <option value="cup">Cup (US)</option>
+        </select>
+        <button onclick="convertVolume()" class="bg-blue-500 text-white px-4 py-2 rounded">Convert</button>
+      </div>
+      <p id="volumeResult" class="mt-2"></p>
+    </div>
+
+    <!-- Add more converters here as needed -->
+
+  </div>
+
+  <script>
+    // Populate currency dropdowns
+    async function loadCurrencies() {
+      const res = await axios.get('https://api.exchangerate.host/symbols');
+      const symbols = res.data.symbols;
+      const from = document.getElementById('currencyFrom');
+      const to = document.getElementById('currencyTo');
+      for (let code in symbols) {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.innerText = `${code} - ${symbols[code].description}`;
+        from.appendChild(opt.cloneNode(true));
+        to.appendChild(opt);
+      }
+    }
+
+    async function convertCurrency() {
+      const amount = document.getElementById('currencyInput').value;
+      const from = document.getElementById('currencyFrom').value;
+      const to = document.getElementById('currencyTo').value;
+      const res = await axios.get(`https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`);
+      document.getElementById('currencyResult').innerText = `Result: ${res.data.result} ${to}`;
+    }
+
+    function convertTemp() {
+      const value = parseFloat(document.getElementById('tempInput').value);
+      const unit = document.getElementById('tempUnit').value;
+      let result = '';
+      if (unit === 'C') {
+        result = `${(value * 9 / 5 + 32).toFixed(2)} °F | ${(value + 273.15).toFixed(2)} K`;
+      } else if (unit === 'F') {
+        result = `${((value - 32) * 5 / 9).toFixed(2)} °C | ${(((value - 32) * 5 / 9) + 273.15).toFixed(2)} K`;
+      } else {
+        result = `${(value - 273.15).toFixed(2)} °C | ${((value - 273.15) * 9 / 5 + 32).toFixed(2)} °F`;
+      }
+      document.getElementById('tempResult').innerText = `Result: ${result}`;
+    }
+
+    function convertWeight() {
+      const value = parseFloat(document.getElementById('weightInput').value);
+      const unit = document.getElementById('weightUnit').value;
+      let result = unit === 'kg' ? `${(value * 2.20462).toFixed(2)} lb` : `${(value / 2.20462).toFixed(2)} kg`;
+      document.getElementById('weightResult').innerText = `Result: ${result}`;
+    }
+
+    function convertVolume() {
+      const value = parseFloat(document.getElementById('volumeInput').value);
+      const unit = document.getElementById('volumeUnit').value;
+      let result = '';
+      if (unit === 'liters') result = `${(value * 1000)} ml | ${(value * 0.264172).toFixed(2)} gal | ${(value * 4.22675).toFixed(2)} cups`;
+      if (unit === 'ml') result = `${(value / 1000)} l | ${(value * 0.000264172).toFixed(2)} gal | ${(value * 0.00422675).toFixed(2)} cups`;
+      if (unit === 'gallon') result = `${(value * 3.78541).toFixed(2)} l | ${(value * 3785.41).toFixed(2)} ml | ${(value * 16).toFixed(2)} cups`;
+      if (unit === 'cup') result = `${(value * 0.236588).toFixed(2)} l | ${(value * 236.588).toFixed(2)} ml | ${(value * 0.0625).toFixed(2)} gal`;
+      document.getElementById('volumeResult').innerText = `Result: ${result}`;
+    }
+
+    loadCurrencies();
+  </script>
+</body>
+
+</html>
